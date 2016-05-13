@@ -58,14 +58,18 @@ func compare(a, b interface{}) bool {
 	}
 }
 
+func (s *SkipList) seekLessThan(now *node, key interface{}) *node {
+	for compare(now.next.key, key) {
+		now = now.next
+	}
+	return now
+}
+
 func (s *SkipList) insert(now *node, depth int, key interface{}) *node {
 	if depth == MAX_DEPTH {
 		return nil
 	}
-	s.logger.Debug(depth, now.key)
-	for compare(now.next.key, key) {
-		now = now.next
-	}
+	now = s.seekLessThan(now, key)
 
 	s.logger.Debug(now.down, now.key)
 	down := s.insert(now.down, depth+1, key)
@@ -91,9 +95,8 @@ func (s *SkipList) remove(now *node, depth int, key interface{}) {
 		return
 	}
 
-	for compare(now.next.key, key) {
-		now = now.next
-	}
+	now = s.seekLessThan(now, key)
+
 	s.remove(now.down, depth+1, key)
 	for now.next.key == key {
 		tmp := now.next.next
@@ -108,9 +111,7 @@ func (s *SkipList) Remove(key interface{}) {
 }
 
 func (s *SkipList) find(now *node, depth int, key interface{}) *node {
-	for compare(now.next.key, key) {
-		now = now.next
-	}
+	now = s.seekLessThan(now, key)
 	if depth == MAX_DEPTH-1 {
 		return now
 	}
