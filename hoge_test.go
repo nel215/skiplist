@@ -40,3 +40,14 @@ func TestFind(t *testing.T) {
 		t.Error("next key must be 10")
 	}
 }
+
+func TestDelete(t *testing.T) {
+	list := newList()
+	list.Insert(6, struct{}{})
+	list.Insert(6, struct{}{})
+	list.Insert(6, struct{}{})
+	list.Remove(6)
+	if _, ok := list.Find(6); ok {
+		t.Error("6 must not be found")
+	}
+}
