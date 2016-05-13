@@ -1,7 +1,12 @@
 package skiplist
 
 import (
-	_ "log"
+	"github.com/Sirupsen/logrus"
+	"math/rand"
+)
+
+const (
+	MAX_DEPTH = 20
 )
 
 type min struct{}
@@ -10,16 +15,32 @@ type max struct{}
 type node struct {
 	key  interface{}
 	next *node
+	down *node
 }
 
 type SkipList struct {
-	head *node
+	heads  []*node
+	logger logrus.FieldLogger
 }
 
-func New() *SkipList {
-	tail := &node{max{}, nil}
-	head := &node{min{}, tail}
-	return &SkipList{head}
+func New(logger logrus.FieldLogger) *SkipList {
+	s := &SkipList{
+		heads:  make([]*node, MAX_DEPTH),
+		logger: logger,
+	}
+	for i := 0; i < MAX_DEPTH; i++ {
+		tail := &node{max{}, nil, nil}
+		head := &node{min{}, tail, nil}
+		s.heads[i] = head
+	}
+	for i := 0; i < MAX_DEPTH-1; i++ {
+		s.heads[i].down = s.heads[i+1]
+	}
+	return s
+}
+
+func (s *SkipList) bottom() *node {
+	return s.heads[MAX_DEPTH-1]
 }
 
 func compare(a, b interface{}) bool {
@@ -37,25 +58,46 @@ func compare(a, b interface{}) bool {
 	}
 }
 
-func (s *SkipList) Insert(key interface{}, value interface{}) {
-	e := &node{key, nil}
-	now := s.head
-	for compare(now.next.key, e.key) {
+func (s *SkipList) insert(now *node, depth int, key interface{}) *node {
+	if depth == MAX_DEPTH {
+		return nil
+	}
+	s.logger.Debug(depth, now.key)
+	for compare(now.next.key, key) {
 		now = now.next
 	}
-	e.next = now.next
-	now.next = e
+
+	s.logger.Debug(now.down, now.key)
+	down := s.insert(now.down, depth+1, key)
+
+	if depth == MAX_DEPTH-1 || (down != nil && rand.Float64() < 0.5) {
+		e := &node{
+			key:  key,
+			next: now.next,
+			down: down,
+		}
+		now.next = e
+		return e
+	}
+	return nil
+}
+
+func (s *SkipList) Insert(key interface{}, value interface{}) {
+	s.insert(s.heads[0], 0, key)
 }
 
 func (s *SkipList) Iterator() *Iterator {
-	return &Iterator{s.head}
+	return &Iterator{s.bottom(), s.logger}
 }
 
 type Iterator struct {
-	node *node
+	node   *node
+	logger logrus.FieldLogger
 }
 
 func (i *Iterator) Next() bool {
+	a, b := i.node.next.key.(max)
+	i.logger.Debug(a, b)
 	if _, ok := i.node.next.key.(max); ok {
 		return false
 	}
