@@ -82,6 +82,23 @@ func (s *SkipList) insert(now *node, depth int, key interface{}) *node {
 	return nil
 }
 
+func (s *SkipList) find(now *node, depth int, key interface{}) *node {
+	for compare(now.next.key, key) {
+		now = now.next
+	}
+	if depth == MAX_DEPTH-1 {
+		return now
+	}
+	return s.find(now.down, depth+1, key)
+}
+func (s *SkipList) Find(key interface{}) (*Iterator, bool) {
+	n := s.find(s.heads[0], 0, key)
+	if n.next.key == key {
+		return &Iterator{n.next, s.logger}, true
+	}
+	return nil, false
+}
+
 func (s *SkipList) Insert(key interface{}, value interface{}) {
 	s.insert(s.heads[0], 0, key)
 }
