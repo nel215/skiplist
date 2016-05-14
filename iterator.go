@@ -10,8 +10,6 @@ type Iterator struct {
 }
 
 func (i *Iterator) Next() bool {
-	a, b := i.node.next.key.(max)
-	i.logger.Debug(a, b)
 	if _, ok := i.node.next.key.(max); ok {
 		return false
 	}

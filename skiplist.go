@@ -71,7 +71,6 @@ func (s *SkipList) insert(now *node, depth int, key interface{}) *node {
 	}
 	now = s.seekLessThan(now, key)
 
-	s.logger.Debug(now.down, now.key)
 	down := s.insert(now.down, depth+1, key)
 
 	if depth == MAX_DEPTH-1 || (down != nil && rand.Float64() < 0.5) {
