@@ -7,12 +7,11 @@ import (
 
 func newList() *SkipList {
 	logger := logrus.New()
-	//logger.Level = logrus.DebugLevel
 	logger.Level = logrus.WarnLevel
 	return New(logger)
 }
 
-func TestHoge(t *testing.T) {
+func TestIterator(t *testing.T) {
 	list := newList()
 	list.Insert(6, struct{}{})
 	list.Insert(10, struct{}{})
@@ -41,7 +40,7 @@ func TestFind(t *testing.T) {
 	}
 }
 
-func TestDelete(t *testing.T) {
+func TestRemove(t *testing.T) {
 	list := newList()
 	list.Insert(6, struct{}{})
 	list.Insert(6, struct{}{})
